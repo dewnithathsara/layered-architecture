@@ -1,10 +1,16 @@
 package com.example.layeredarchitecture.controller;
 
-import com.example.layeredarchitecture.DAO.*;
+import com.example.layeredarchitecture.DAO.custom.CustomerDAO;
+import com.example.layeredarchitecture.DAO.custom.ItemDAO;
+import com.example.layeredarchitecture.DAO.custom.OrderDAO;
+import com.example.layeredarchitecture.DAO.custom.OrderDetailDao;
+import com.example.layeredarchitecture.DAO.impl.CustomerDAOimpl;
+import com.example.layeredarchitecture.DAO.impl.ItemDAOimpl;
+import com.example.layeredarchitecture.DAO.impl.OrderDAOimpl;
+import com.example.layeredarchitecture.DAO.impl.OrderDetailDaoImpl;
 import com.example.layeredarchitecture.db.DBConnection;
 import com.example.layeredarchitecture.model.CustomerDTO;
 import com.example.layeredarchitecture.model.ItemDTO;
-import com.example.layeredarchitecture.model.OrderDTO;
 import com.example.layeredarchitecture.model.OrderDetailDTO;
 import com.example.layeredarchitecture.view.tdm.OrderDetailTM;
 import com.jfoenix.controls.JFXButton;
@@ -187,13 +193,13 @@ public class PlaceOrderFormController {
 
     private boolean existItem(String code) throws SQLException, ClassNotFoundException {
 
-        boolean isExsits = itemDAO.existId(code);
+        boolean isExsits = itemDAO.exist(code);
         return isExsits;
     }
 
     boolean existCustomer(String id) throws SQLException, ClassNotFoundException {
 
-        boolean isExists = dao.existCustomer(id);
+        boolean isExists = dao.exist(id);
         return isExists;
     }
 
@@ -201,7 +207,7 @@ public class PlaceOrderFormController {
         String id = null;
         try {
             OrderDAOimpl dao = new OrderDAOimpl();
-            id = dao.genarateOrderId();
+            id = dao.generateId();
         } catch (SQLException e) {
             new Alert(Alert.AlertType.ERROR, "Failed to generate a new order id").show();
         } catch (ClassNotFoundException e) {
@@ -213,7 +219,7 @@ public class PlaceOrderFormController {
     private void loadAllCustomerIds() {
         try {
 
-            ArrayList<CustomerDTO> customerDTOS = dao.getAllCustomers();
+            ArrayList<CustomerDTO> customerDTOS = dao.getAll();
             for (CustomerDTO dtos : customerDTOS) {
                 cmbCustomerId.getItems().add(dtos.getId());
             }
@@ -229,7 +235,7 @@ public class PlaceOrderFormController {
         try {
             /*Get all items*/
 
-            ArrayList<ItemDTO> dtos = itemDAO.getAllItems();
+            ArrayList<ItemDTO> dtos = itemDAO.getAll();
             for (ItemDTO itemDTO : dtos) {
                 cmbItemCode.getItems().add(itemDTO.getCode());
             }
@@ -324,49 +330,44 @@ public class PlaceOrderFormController {
     }
 
     public boolean saveOrder(String orderId, LocalDate orderDate, String customerId, List<OrderDetailDTO> orderDetails) {
-
+       Connection connection=null;
         try {
-
-            boolean isExists = Orderdao.existId(orderId);
+            connection=DBConnection.getDbConnection().getConnection();
+            boolean isExists = Orderdao.exist(orderId);
+           // TransactionUtil.setAutoCommitFalse();
             System.out.println(isExists);
-
-            /*if order id already exist*/
             if (isExists) {
-                new Alert(Alert.AlertType.INFORMATION, "id is already exists").show();
-            } else {
-                boolean isSave = Orderdao.saveOrders(orderId, orderDate, customerId);
+               new Alert(Alert.AlertType.INFORMATION,"order id already exists").show();
+            }
+            connection.setAutoCommit(false);
+            boolean isSave = Orderdao.saveOrders(orderId, orderDate, customerId);
                 if (isSave) {
-
-                    System.out.println("my man is cupid");
                     boolean isSaved = detailDao.savedOrderDetails(orderDetails, orderId);
-                    System.out.println("moon in the day");
                     if (isSaved) {
-                        System.out.println("park yeonn woo");
                         for (OrderDetailDTO detail : orderDetails) {
-                            System.out.println("Kang tea ha");
                             ItemDTO item = findItem(detail.getItemCode());
                             item.setQtyOnHand(item.getQtyOnHand() - detail.getQty());
-                            System.out.println("my demon");
-
                             ItemDTO dto = new ItemDTO(item.getCode(), item.getDescription(), item.getUnitPrice(), item.getQtyOnHand());
-                            boolean isUpdated = itemDAO.updateItem(dto);
-                            System.out.println("kim do ha");
+                            boolean isUpdated = itemDAO.update(dto);
                             if (isUpdated) {
-                                new Alert(Alert.AlertType.INFORMATION, "item is updated").show();
-                                System.out.println("no one");
+                                new Alert(Alert.AlertType.INFORMATION, "item is  updated").show();
                             }
                         }
                     }
+                }else{
+                    connection.rollback();
+                    connection.setAutoCommit(true);
                 }
-            }
-
-
+                connection.commit();
+                connection.setAutoCommit(true);
+                return true;
+           // TransactionUtil.setAutoCommitTrue();
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
-        return true;
+        return false;
     }
 
     public ItemDTO findItem(String code) {
