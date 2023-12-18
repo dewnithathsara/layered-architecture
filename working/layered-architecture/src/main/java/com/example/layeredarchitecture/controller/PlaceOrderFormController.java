@@ -337,36 +337,36 @@ public class PlaceOrderFormController {
                 boolean isSave = Orderdao.saveOrders(orderId, orderDate, customerId);
                 if (isSave) {
 
-                    System.out.println("my man is cupid");
+
                     boolean isSaved = detailDao.savedOrderDetails(orderDetails, orderId);
-                    System.out.println("moon in the day");
+
                     if (isSaved) {
-                        System.out.println("park yeonn woo");
+
                         for (OrderDetailDTO detail : orderDetails) {
-                            System.out.println("Kang tea ha");
+
                             ItemDTO item = findItem(detail.getItemCode());
                             item.setQtyOnHand(item.getQtyOnHand() - detail.getQty());
-                            System.out.println("my demon");
+
 
                             ItemDTO dto = new ItemDTO(item.getCode(), item.getDescription(), item.getUnitPrice(), item.getQtyOnHand());
                             boolean isUpdated = itemDAO.updateItem(dto);
-                            System.out.println("kim do ha");
+
                             if (isUpdated) {
                                 new Alert(Alert.AlertType.INFORMATION, "item is updated").show();
-                                System.out.println("no one");
+
                             }
                         }
                     }
                 }
             }
-
+            return true;
 
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
-        return true;
+        return false;
     }
 
     public ItemDTO findItem(String code) {
