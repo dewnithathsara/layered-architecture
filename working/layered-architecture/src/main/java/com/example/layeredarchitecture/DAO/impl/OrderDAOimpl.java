@@ -2,8 +2,11 @@ package com.example.layeredarchitecture.DAO.impl;
 
 import com.example.layeredarchitecture.DAO.SqlUtil;
 import com.example.layeredarchitecture.DAO.custom.OrderDAO;
+import com.example.layeredarchitecture.model.CustomerDTO;
+import com.example.layeredarchitecture.model.ItemDTO;
 import com.example.layeredarchitecture.model.OrderDTO;
 
+import java.math.BigDecimal;
 import java.sql.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -19,7 +22,18 @@ public class OrderDAOimpl implements OrderDAO {
 
     @Override
     public ArrayList<OrderDTO> getAll() throws SQLException, ClassNotFoundException {
-        return null;
+        ResultSet rst = SqlUtil.testQuery("SELECT * FROM Orders");
+        ArrayList<OrderDTO> dtoList = new ArrayList<>();
+        while (rst.next()) {
+            dtoList.add(
+                    new OrderDTO(
+                            rst.getString(1),
+                            rst.getDate(2).toLocalDate(),
+                            rst.getString(3)));
+
+        }
+        System.out.println(dtoList);
+        return dtoList;
     }
 
     @Override

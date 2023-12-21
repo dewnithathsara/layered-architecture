@@ -5,10 +5,7 @@ import com.example.layeredarchitecture.DAO.custom.CustomerDAO;
 import com.example.layeredarchitecture.DAO.custom.ItemDAO;
 import com.example.layeredarchitecture.DAO.custom.OrderDAO;
 import com.example.layeredarchitecture.DAO.custom.OrderDetailDao;
-import com.example.layeredarchitecture.DAO.impl.CustomerDAOimpl;
-import com.example.layeredarchitecture.DAO.impl.ItemDAOimpl;
-import com.example.layeredarchitecture.DAO.impl.OrderDAOimpl;
-import com.example.layeredarchitecture.DAO.impl.OrderDetailDaoImpl;
+import com.example.layeredarchitecture.DAO.impl.*;
 import com.example.layeredarchitecture.db.DBConnection;
 import com.example.layeredarchitecture.model.CustomerDTO;
 import com.example.layeredarchitecture.model.ItemDTO;
@@ -64,7 +61,7 @@ public class PlaceOrderFormController {
     OrderDetailDao detailDao = new OrderDetailDaoImpl();
 
     public void initialize() throws SQLException, ClassNotFoundException {
-
+      //  getAllDetails();
         tblOrderDetails.getColumns().get(0).setCellValueFactory(new PropertyValueFactory<>("code"));
         tblOrderDetails.getColumns().get(1).setCellValueFactory(new PropertyValueFactory<>("description"));
         tblOrderDetails.getColumns().get(2).setCellValueFactory(new PropertyValueFactory<>("qty"));
@@ -375,6 +372,11 @@ public class PlaceOrderFormController {
             e.printStackTrace();
         }
         return true;
+    }
+    public void getAllDetails(){
+        QueryDAOimpl dao=new QueryDAOimpl();
+        dao.getDetails();
+
     }
 
     public ItemDTO findItem(String code) {
